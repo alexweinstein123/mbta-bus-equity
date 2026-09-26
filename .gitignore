@@ -1,0 +1,17 @@
+# Data (too large for git, recreate from README)
+data/raw/
+data/processed/
+*.zip
+*.parquet
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# Secrets
+.env
+
+# OS
+.DS_Store
