@@ -74,7 +74,7 @@ Across 2025 the network scores **69.8%** on time, close to the MBTA's 70% bus re
 
 - [x] Repo set up
 - [x] Bus, GTFS and tract data downloaded
-- [ ] ACS data downloaded
+- [x] ACS data downloaded
 - [x] Cleaning pipeline
 - [ ] Reliability metrics by route and stop
 - [ ] Census join and maps
