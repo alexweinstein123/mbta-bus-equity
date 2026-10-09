@@ -7,3 +7,4 @@ statsmodels
 requests
 python-dotenv
 jupyterlab
+folium
