@@ -17,7 +17,9 @@ Quirks of the raw data, found while profiling it:
    trips. In the 2025 file it's the opposite: it's only filled for
    schedule-standard trips. The `headway` column (actual gap to the previous
    bus) is correct, so we derive the scheduled gap from the timetable.
-3. About 6% of timepoints have no actual time. The data notes collection
+3. Silver Line 3 is labeled "743" through early April 2025 and "SL3" after,
+   so we merge the two. Silver Line Way appears as "746_" and becomes "SLW".
+4. About 6% of timepoints have no actual time. The data notes collection
    gaps, so these can be dropped trips or missing data. We keep them with
    on_time = NULL and leave the choice to the analysis.
 
@@ -48,7 +50,11 @@ SQL = f"""
 CREATE TEMP TABLE raw AS
 SELECT
     service_date::DATE                                   AS service_date,
-    regexp_replace(route_id, '^0+(\\d)', '\\1')          AS route_id,  -- "01" -> "1" to match GTFS
+    CASE route_id
+        WHEN '743'  THEN 'SL3'  -- labeled 743 until April 2025, SL3 after
+        WHEN '746_' THEN 'SLW'  -- Silver Line Way
+        ELSE regexp_replace(route_id, '^0+(\\d)', '\\1')  -- "01" -> "1" to match GTFS
+    END                                                  AS route_id,
     direction_id,
     half_trip_id::BIGINT                                 AS half_trip_id,
     stop_id,

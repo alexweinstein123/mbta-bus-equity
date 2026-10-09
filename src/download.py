@@ -26,6 +26,9 @@ BUS_ITEMS = {
     2025: "924df13d845f4907bb6a6c3ed380d57a",
 }
 GTFS_URL = "https://cdn.mbta.com/MBTA_GTFS.zip"
+GTFS_ARCHIVE_INDEX = "https://cdn.mbta.com/archive/archived_feeds.txt"
+# One schedule per season, so route stop lists match how each route ran in 2025
+GTFS_2025_DATES = ["20250115", "20250415", "20250715", "20251015"]
 TRACTS_URL = "https://www2.census.gov/geo/tiger/TIGER2024/TRACT/tl_2024_25_tract.zip"
 
 ACS_YEAR = 2024  # 2020-2024 5-year estimates
@@ -86,6 +89,18 @@ def gtfs():
         unzip(z, out)
 
 
+def gtfs_2025():
+    print("Archived MBTA GTFS feeds for 2025 (one per season)")
+    index = pd.read_csv(GTFS_ARCHIVE_INDEX, dtype=str)
+    for date in GTFS_2025_DATES:
+        feed = index[(index.feed_start_date <= date) & (index.feed_end_date >= date)].iloc[0]
+        print(f"  {date}: {feed.feed_version}")
+        z = fetch(feed.archive_url, RAW / "gtfs_2025" / f"{date}.zip")
+        out = RAW / "gtfs_2025" / date
+        if not out.exists():
+            unzip(z, out)
+
+
 def tracts():
     print("Census tract boundaries (TIGER/Line 2024, Massachusetts)")
     fetch(TRACTS_URL, RAW / "tracts" / "tl_2024_25_tract.zip")  # geopandas reads the zip directly
@@ -120,7 +135,7 @@ def acs():
     print(f"  {len(df):,} tracts -> {dest.relative_to(ROOT)}")
 
 
-SOURCES = {"bus": bus, "gtfs": gtfs, "tracts": tracts, "acs": acs}
+SOURCES = {"bus": bus, "gtfs": gtfs, "gtfs_2025": gtfs_2025, "tracts": tracts, "acs": acs}
 
 if __name__ == "__main__":
     wanted = sys.argv[1:] or list(SOURCES)
