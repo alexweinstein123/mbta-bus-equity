@@ -1,0 +1,133 @@
+Stops: 1,103
+Variables (standardized): share_no_vehicle, income_10k, log_hh_per_km2, share_frequent, share_origin, share_destination
+GWR bandwidth: 397 nearest neighbors
+MGWR bandwidths: intercept 95, share_no_vehicle 1102, income_10k 976, log_hh_per_km2 1102, share_frequent 515, share_origin 231, share_destination 1101
+
+===========================================================================
+Model type                                                         Gaussian
+Number of observations:                                                1103
+Number of covariates:                                                     7
+
+Global Regression Results
+---------------------------------------------------------------------------
+Residual sum of squares:                                            920.868
+Log-likelihood:                                                   -1465.559
+AIC:                                                               2945.117
+AICc:                                                              2947.249
+BIC:                                                              -6757.477
+R2:                                                                   0.165
+Adj. R2:                                                              0.161
+
+Variable                              Est.         SE  t(Est/SE)    p-value
+------------------------------- ---------- ---------- ---------- ----------
+X0                                  -0.000      0.028     -0.000      1.000
+X1                                  -0.091      0.038     -2.416      0.016
+X2                                   0.070      0.031      2.236      0.025
+X3                                   0.091      0.036      2.498      0.012
+X4                                   0.380      0.030     12.712      0.000
+X5                                  -0.146      0.030     -4.894      0.000
+X6                                   0.133      0.030      4.431      0.000
+
+Geographically Weighted Regression (GWR) Results
+---------------------------------------------------------------------------
+Spatial kernel:                                           Adaptive bisquare
+Bandwidth used:                                                     397.000
+
+Diagnostic information
+---------------------------------------------------------------------------
+Residual sum of squares:                                            767.904
+Effective number of parameters (trace(S)):                           48.380
+Degree of freedom (n - trace(S)):                                  1054.620
+Sigma estimate:                                                       0.853
+Log-likelihood:                                                   -1365.378
+AIC:                                                               2829.515
+AICc:                                                              2834.242
+BIC:                                                               3076.702
+R2:                                                                   0.304
+Adjusted R2:                                                          0.272
+Adj. alpha (95%):                                                     0.007
+Adj. critical t value (95%):                                          2.691
+
+Summary Statistics For GWR Parameter Estimates
+---------------------------------------------------------------------------
+Variable                   Mean        STD        Min     Median        Max
+-------------------- ---------- ---------- ---------- ---------- ----------
+X0                        0.039      0.251     -0.317      0.020      0.474
+X1                       -0.125      0.170     -0.624     -0.125      0.183
+X2                        0.057      0.184     -0.387      0.093      0.477
+X3                        0.047      0.097     -0.207      0.029      0.355
+X4                        0.385      0.088      0.219      0.397      0.560
+X5                       -0.171      0.116     -0.594     -0.139     -0.028
+X6                        0.153      0.060     -0.074      0.160      0.270
+===========================================================================
+
+
+===========================================================================
+Model type                                                         Gaussian
+Number of observations:                                                1103
+Number of covariates:                                                     7
+
+Global Regression Results
+---------------------------------------------------------------------------
+Residual sum of squares:                                            920.868
+Log-likelihood:                                                   -1465.559
+AIC:                                                               2945.117
+AICc:                                                              2947.249
+BIC:                                                              -6757.477
+R2:                                                                   0.165
+Adj. R2:                                                              0.161
+
+Variable                              Est.         SE  t(Est/SE)    p-value
+------------------------------- ---------- ---------- ---------- ----------
+X0                                  -0.000      0.028     -0.000      1.000
+X1                                  -0.091      0.038     -2.416      0.016
+X2                                   0.070      0.031      2.236      0.025
+X3                                   0.091      0.036      2.498      0.012
+X4                                   0.380      0.030     12.712      0.000
+X5                                  -0.146      0.030     -4.894      0.000
+X6                                   0.133      0.030      4.431      0.000
+
+Multi-Scale Geographically Weighted Regression (MGWR) Results
+---------------------------------------------------------------------------
+Spatial kernel:                                           Adaptive bisquare
+Criterion for optimal bandwidth:                                       AICc
+Score of Change (SOC) type:                                     Smoothing f
+Termination criterion for MGWR:                                       1e-05
+
+MGWR bandwidths
+---------------------------------------------------------------------------
+Variable             Bandwidth      ENP_j   Adj t-val(95%)   Adj alpha(95%)
+X0                      95.000     32.262            3.173            0.002
+X1                    1102.000      1.093            2.000            0.046
+X2                     976.000      1.744            2.191            0.029
+X3                    1102.000      1.227            2.048            0.041
+X4                     515.000      3.725            2.476            0.013
+X5                     231.000     13.993            2.920            0.004
+X6                    1101.000      1.323            2.080            0.038
+
+Diagnostic information
+---------------------------------------------------------------------------
+Residual sum of squares:                                            726.556
+Effective number of parameters (trace(S)):                           55.367
+Degree of freedom (n - trace(S)):                                  1047.633
+Sigma estimate:                                                       0.833
+Log-likelihood:                                                   -1334.853
+AIC:                                                               2782.440
+AICc:                                                              2788.625
+BIC:                                                               3064.603
+R2                                                                    0.341
+Adjusted R2                                                           0.306
+
+Summary Statistics For MGWR Parameter Estimates
+---------------------------------------------------------------------------
+Variable                   Mean        STD        Min     Median        Max
+-------------------- ---------- ---------- ---------- ---------- ----------
+X0                        0.012      0.316     -0.482     -0.023      0.676
+X1                       -0.126      0.002     -0.131     -0.126     -0.121
+X2                        0.015      0.012     -0.031      0.018      0.031
+X3                        0.054      0.005      0.041      0.054      0.066
+X4                        0.389      0.088      0.245      0.393      0.570
+X5                       -0.188      0.125     -0.576     -0.179     -0.004
+X6                        0.157      0.005      0.142      0.157      0.167
+===========================================================================
+

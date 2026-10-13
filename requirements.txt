@@ -13,3 +13,4 @@ libpysal
 esda
 spreg
 mapclassify
+mgwr
