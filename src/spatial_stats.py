@@ -174,11 +174,13 @@ def carfree_sensitivity(gdf):
     rows = []
     for label, rhs in specs.items():
         m = smf.ols(f"on_time_rate ~ {rhs}", d).fit(cov_type="HC1")
+        has_income = "income_10k" in m.params
         rows.append({
             "model": label,
             "carfree_effect_pts_per_10": m.params["carfree_10pts"] * 100,
-            "std_error_pts": m.bse["carfree_10pts"] * 100,
-            "p_value": m.pvalues["carfree_10pts"],
+            "carfree_p": m.pvalues["carfree_10pts"],
+            "income_effect_pts_per_10k": m.params["income_10k"] * 100 if has_income else np.nan,
+            "income_p": m.pvalues["income_10k"] if has_income else np.nan,
             "n": int(m.nobs),
         })
     return pd.DataFrame(rows)

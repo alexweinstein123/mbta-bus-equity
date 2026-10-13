@@ -1,6 +1,6 @@
-model,carfree_effect_pts_per_10,std_error_pts,p_value,n
-No controls,0.6254,0.2238,0.0052,1103
-+ income,0.7863,0.2511,0.0017,1103
-+ distance to downtown,-0.9478,0.3539,0.0074,1103
-+ on-time test type only,-0.3299,0.2421,0.173,1103
-Full model,-1.493,0.329,0.0,1103
+model,carfree_effect_pts_per_10,carfree_p,income_effect_pts_per_10k,income_p,n
+No controls,0.6254,0.0052,,,1103
++ income,0.7863,0.0017,0.136,0.1248,1103
++ distance to downtown,-0.9478,0.0074,-0.0437,0.6257,1103
++ on-time test type only,-0.3299,0.173,0.1497,0.0612,1103
+Full model,-1.493,0.0,0.0175,0.8416,1103

@@ -1,98 +1,112 @@
 # MBTA Bus Reliability and Equity
 
-Do MBTA buses serving lower income, lower car ownership neighborhoods run less reliably than buses serving wealthier areas?
+An analysis of every MBTA bus timepoint in 2025, testing whether buses serving lower income and car-free neighborhoods run less reliably than buses serving wealthier, car-owning areas.
 
-This project scores every MBTA bus timepoint in 2025 against the MBTA's own on-time rules, links each stop to the people within a real walking distance of it, and tests whether reliability differs by neighborhood car ownership and income, using spatial statistics and passenger-weighted measures.
+## The question
 
-## Findings
+**Do MBTA buses serving lower income, lower car ownership neighborhoods run less reliably than buses serving wealthier areas?**
 
-The hypothesis was only partly supported.
+**Hypothesis going in:** yes. Neighborhoods with lower incomes and more car-free households would see worse on-time performance, even though riders there depend on the bus most.
 
-- **Reliability is low across the network.** Buses were on time at **69.8%** of timepoints in 2025, right at the MBTA's 70% minimum. **92 of 148 routes** fell below that target, carrying about **35% of weekday riders** (115,000 of 327,000 boardings).
-- **Car-free neighborhoods get better reliability, not worse, overall.** Weighted by riders, buses at stops in the most car-free quarter of neighborhoods were on time **69%** of the time, against **58%** in the least car-free quarter. Only 17% of riders on the most car-free routes ride routes below target, compared with 62% on the least car-free routes.
-- **That advantage comes from location.** Car-free neighborhoods sit close to downtown (correlation −0.68), where routes are short and frequent. Comparing stops at a similar distance from downtown, more car-free households go with *slightly lower* reliability, about **1 to 1.5 points per 10 points of car-free share**. The sign depends on that control (see the table below), so this is a conditional finding, not a headline gap.
-- **The on-time standard itself favors the core.** Frequent routes are judged by a spacing test, infrequent ones by a timetable test. Frequent-test stops score about 10 points higher (74% vs 63%), and accounting for test type alone removes the car-free difference.
-- **The worst reliability clusters are in the outer network.** Hot spot analysis finds statistically significant clusters of poor reliability around Alewife, Lynn and Route 1 north, in areas with average car ownership.
+**Why it matters:** about a third of households in Suffolk County (Boston, Chelsea, Revere and Winthrop) don't own a car. For them, an unreliable bus means missed shifts, longer trips and fewer options.
 
-How the car-free relationship changes as controls are added (stop level, OLS with robust standard errors, `results/carfree_sensitivity.csv`):
+## What I found
 
-| Model | Effect per 10 points more car-free households | p |
-|---|---|---|
-| No controls | +0.6 points of on-time rate | 0.005 |
-| + income | +0.8 | 0.002 |
-| + distance to downtown | −0.9 | 0.007 |
-| + on-time test type only | −0.3 | 0.17 |
-| Full model | −1.5 | <0.001 |
+The hypothesis was **not supported**. Reliability problems follow geography more than demographics.
 
-## Methods
+1. **Reliability is low across the whole network.** Buses were on time at **69.8%** of timepoints in 2025, right at the MBTA's 70% minimum. **92 of 148 routes** fell below that target, carrying about **35% of weekday riders** (115,000 of 327,000 boardings).
+2. **Income makes no difference.** Weighted by riders, on-time performance is between **67% and 68% in every income quartile**, and income has no significant effect in any model.
+3. **Car-free neighborhoods get better reliability, not worse.** Weighted by riders, buses in the most car-free quarter of neighborhoods were on time **69%** of the time, against **58%** in the least car-free quarter.
+4. **That advantage comes from location.** Car-free neighborhoods are close to downtown, where routes are short and frequent. Comparing stops at a similar distance from downtown, more car-free households go with *slightly lower* reliability, about 1 to 1.5 points per 10 points of car-free share. This holds only once location is accounted for.
+5. **The worst service is in the outer network.** Hot spot analysis finds significant clusters of poor reliability around Alewife, Lynn and Route 1 north, in areas with average car ownership and income.
+6. **The MBTA's on-time standard favors the core.** Frequent routes are judged by a more lenient spacing test than infrequent ones, and frequent-test stops score about 10 points higher (74% vs 63%).
+
+**In short:** riders in the outer, car-owning parts of the network get the least reliable service. Car-free riders benefit from living near the core, but among places at a similar distance from downtown, they fare slightly worse, and part of the core's advantage comes from how reliability is measured.
+
+### On-time rate by neighborhood (Fall 2025, weighted by riders)
+
+| Quartile of stop walkshed | Car-free share | On time | Median income | On time |
+|---|---|---|---|---|
+| Lowest | under 9% car-free | **58%** | under $84k | 67% |
+| Second | 9–17% | 67% | $84k–$112k | 67% |
+| Third | 17–33% | 67% | $112k–$145k | 67% |
+| Highest | over 33% car-free | **69%** | over $145k | 68% |
+
+Source: `results/reliability_by_quartile.csv`
+
+### How the car-free result depends on location
+
+Stop-level OLS with robust standard errors (`results/carfree_sensitivity.csv`). Each row adds controls; effects are in points of on-time rate.
+
+| Model | Car-free effect, per 10 points | p | Income effect, per $10k | p |
+|---|---|---|---|---|
+| No controls | +0.6 | 0.005 | | |
+| + income | +0.8 | 0.002 | +0.1 | 0.13 |
+| + distance to downtown | −0.9 | 0.007 | 0.0 | 0.63 |
+| + on-time test type only | −0.3 | 0.17 | +0.2 | 0.06 |
+| Full model | −1.5 | <0.001 | 0.0 | 0.84 |
+
+The car-free effect flips sign once distance to downtown is included (car-free share and distance correlate at −0.68). Income never matters.
+
+## How I did it
 
 | Step | Script | What it does |
 |---|---|---|
 | 1. Download | `src/download.py` | Fetches all source data |
 | 2. Clean and score | `src/clean.py` | Converts 28.1M timepoint records to local time and scores each one with the MBTA's on-time rules |
 | 3. Walksheds | `src/walksheds.py` | Builds a quarter-mile street-network walkshed for each of 6,790 stops from OpenStreetMap |
-| 4. Route equity | `src/equity.py` | Apportions Census data to each route's walkshed; exports GIS layers |
-| 5. Spatial statistics | `src/spatial_stats.py` | Getis-Ord Gi\* hot spots, Moran's I, OLS with spatial diagnostics, spatial error model, sensitivity table |
-| 6. GWR | `src/gwr.py` | Geographically weighted and multiscale GWR |
-| 7. Ridership | `src/ridership.py` | Weights reliability by riders on board using Fall 2025 trip-level counts |
+| 4. Neighborhood data | `src/equity.py` | Apportions Census income and car ownership to walksheds; exports GIS layers |
+| 5. Spatial statistics | `src/spatial_stats.py` | Hot spots, spatial autocorrelation, spatial regression, sensitivity table |
+| 6. Local regression | `src/gwr.py` | Geographically weighted and multiscale GWR |
+| 7. Riders | `src/ridership.py` | Weights reliability by the riders on each bus; quartile tables |
 
-### Measuring reliability
-
-Every timepoint crossing is scored on time or not using the MBTA's own rules from the [Service Delivery Policy](https://www.mbta.com/policies/service-delivery-policy) (December 2025, pp. 19–20):
+**Measuring reliability.** Each timepoint crossing is scored with the MBTA's own rules from its [Service Delivery Policy](https://www.mbta.com/policies/service-delivery-policy) (December 2025, pp. 19–20):
 
 | Standard | Origin | Mid-route | Destination |
 |---|---|---|---|
 | Schedule (headways over 15 min) | depart 0 to 3 min late | depart 1 min early to 6 min late | arrive no more than 5 min late |
 | Headway (headways of 15 min or less) | gap to previous bus ≤ scheduled gap + 3 min | same | run time ≤ 120% of scheduled |
 
-### Who a stop serves: street-network walksheds
+**Who a stop serves.**
+- **Walksheds:** each stop's catchment is the area within a quarter-mile walk (402 m) along OpenStreetMap streets and paths, buffered 50 m to cover the buildings that front them. Walksheds respect rivers, highways and dead ends. The median one covers only 50% of a quarter-mile circle.
+- **Census data:** households, car-free households and income are apportioned from tracts to walksheds by area.
+- **Projection:** all distances use Massachusetts State Plane (EPSG:26986).
 
-Each stop's catchment is the area reachable by walking a quarter mile (402 m) along OpenStreetMap streets and paths, buffered 50 m to cover the buildings that front them. This respects rivers, highways, rail lines and dead ends. The median walkshed covers only **50%** of a quarter-mile circle. Census households, car-free households and income are apportioned from tracts to walksheds by area. All distances and areas use Massachusetts State Plane (EPSG:26986).
+**Spatial analysis.** The unit is the timepoint stop, where reliability is measured: 1,103 stops with at least 500 scored crossings.
+- **Moran's I = 0.164** (p < 0.001): nearby stops have similar reliability.
+- **Getis-Ord Gi\* hot spots** (8 nearest neighbors, false discovery rate correction): 66 stops in clusters of poor reliability, 101 in clusters of good reliability.
+- **Spatial error model:** chosen by Lagrange multiplier tests on OLS residuals, with heteroskedasticity-robust errors.
+- **Multiscale GWR:** baseline reliability varies very locally (bandwidth 95 of 1,103 stops), while the car-free relationship is the same across the network. Fit improves from R² 0.18 to 0.34.
 
-At the route level, walksheds and circles give nearly identical demographics (correlation 0.998), because each route crosses many tracts. Walksheds matter at the stop level, where the spatial analysis is done.
+**Riders.** Fall 2025 ridership counts give the average load on every trip at every stop. 96% of timepoint crossings in the Fall 2025 rating (Aug 24 to Dec 13) match a counted trip, and each is weighted by the riders on board. Counting riders instead of buses lowers the on-time rate from 68.7% to 67.6%, since crowded trips run later.
 
-### Spatial analysis
+### Data problems found and fixed
 
-The unit of analysis is the timepoint stop, where reliability is actually measured (1,103 stops with at least 500 scored crossings).
-
-- **Moran's I** of on-time rate is 0.164 (p < 0.001): nearby stops have similar reliability.
-- **Getis-Ord Gi\*** (8 nearest neighbors, false discovery rate correction) finds 66 stops in clusters of poor reliability and 101 in clusters of good reliability.
-- **Regression.** Lagrange multiplier tests on OLS residuals favored a **spatial error model**, re-estimated with heteroskedasticity-robust errors. Controls: income, distance to downtown, housing density, number of routes, and which on-time test applies.
-- **MGWR** (multiscale geographically weighted regression) lets each variable work at its own scale. Baseline reliability varies very locally (bandwidth 95 of 1,103 stops), while the car-free relationship is global (bandwidth = all stops) at about −1 point per 10. Local fit improves from R² 0.18 (global) to 0.34.
-
-### Passenger weighting
-
-Fall 2025 ridership counts give the average boardings, alightings and load for every trip at every stop. 96% of timepoint crossings in the Fall 2025 rating (Aug 24 to Dec 13) match a ridership trip by route, direction, trip start time, stop and day type. Each crossing is weighted by everyone on the bus at that point. Counting riders instead of buses lowers the on-time rate from 68.7% to 67.6%, since crowded trips run later.
-
-### Data quirks worth knowing
-
-- **Times aren't UTC.** They're written like `1900-01-02T04:57:00Z`, but they're Boston local time plus a fixed 5 hours all year, ignoring daylight saving. Route 1's first weekday trip is 4:37 AM in GTFS and `09:37` in the data in both January and July. `clean.py` converts them to real local timestamps.
-- **The data dictionary has the headway columns backwards.** `scheduled_headway` is only filled for schedule-standard trips, not headway-standard ones. The actual `headway` column is correct, so the scheduled gap is rebuilt from the timetable.
+- **Times aren't UTC.** They're stamped `1900-01-02T04:57:00Z`, but they're Boston local time plus a fixed 5 hours, ignoring daylight saving. Route 1's first weekday trip is 4:37 AM in the schedule and `09:37` in the data, in both January and July.
+- **The data dictionary has the headway columns backwards.** `scheduled_headway` is filled only for schedule-standard trips, so the scheduled gap for frequent trips is rebuilt from the timetable.
 - **Silver Line 3 changes ids mid-year:** `743` through early April 2025, `SL3` after.
-- **About 6% of timepoints have no actual time**, either dropped trips or collection gaps. They're kept with `on_time` empty. The MBTA counts dropped trips as failures, so treating them as failures gives a lower bound.
-- **The Fall 2025 ridership file** doesn't match the published data dictionary, uses different columns from earlier seasons, and stores about 2% of trip start times as fractions of a day.
-- **Virtual timepoints.** 20 timepoints are on bridges, tunnels and ramps (the Tobin Bridge, the Ted Williams Tunnel, the Allston tolls) where nobody boards. They count toward route on-time rates but are left out of the stop-level analysis.
+- **About 6% of timepoints have no actual time** (dropped trips or collection gaps). They're left unscored. The MBTA counts dropped trips as failures, so treating them as failures gives a lower bound.
+- **The Fall 2025 ridership file** doesn't match its published data dictionary, uses different columns from earlier seasons, and stores about 2% of trip start times as fractions of a day.
+- **Virtual timepoints:** 20 timepoints sit on bridges, tunnels and ramps where nobody boards. They count toward route on-time rates but are left out of the stop-level analysis.
 
-## Limitations
+## Limitations and next steps
 
 - **Association, not cause.** The analysis can't separate car ownership from things that travel with it, such as traffic, street design and crowding.
-- **Two on-time tests.** Comparisons across neighborhoods partly reflect which test a stop is judged by, not only how buses perform.
+- **Two on-time tests.** Neighborhood comparisons partly reflect which test a stop is judged by, not only how buses perform.
 - **Areal interpolation** assumes people are spread evenly within each census tract.
 - **Ridership** is a Fall 2025 snapshot, applied to the Fall 2025 rating only.
-- **Future work:** a Title VI style analysis by race and ethnicity, the framework federal transit equity analysis uses.
+- **Next:** a Title VI analysis by race and ethnicity, the framework federal transit equity reviews use; and a closer look at why outer-network routes underperform (route length, traffic, scheduling).
 
 ## Data sources
 
-| Dataset | Source | Where it goes |
-|---|---|---|
-| Bus Arrival Departure Times 2025 (CC0) | [MBTA Open Data Portal](https://mbta-massdot.opendata.arcgis.com/) | `data/raw/arrival_departure/` |
-| Bus Ridership by Trip, Season, Route, Line, and Stop (CC0) | [MBTA Open Data Portal](https://mbta-massdot.opendata.arcgis.com/) | `data/raw/ridership/` |
-| MBTA GTFS, four 2025 schedules (January, April, July, October) | [MBTA GTFS archive](https://cdn.mbta.com/archive/archived_feeds.txt) | `data/raw/gtfs_2025/` |
-| ACS 2020–2024 5-year estimates: median household income (B19013) and vehicles available (B08201) by tract | [U.S. Census Bureau API](https://www.census.gov/data/developers.html) | `data/raw/acs/` |
-| Census tract boundaries, Massachusetts (TIGER/Line 2024) | [Census TIGER/Line](https://www.census.gov/geographies/mapping-files/time-series/geo/tiger-line-file.html) | `data/raw/tracts/` |
-| Street and path network | [OpenStreetMap](https://www.openstreetmap.org/) via OSMnx | `data/raw/osm/` |
-
-Raw data is not committed to the repo because the files are large. `src/download.py` fetches everything except the OpenStreetMap network, which `walksheds.py` downloads on its first run.
+| Dataset | Source |
+|---|---|
+| Bus Arrival Departure Times 2025 (CC0) | [MBTA Open Data Portal](https://mbta-massdot.opendata.arcgis.com/) |
+| Bus Ridership by Trip, Season, Route, Line, and Stop, Fall 2025 (CC0) | [MBTA Open Data Portal](https://mbta-massdot.opendata.arcgis.com/) |
+| MBTA GTFS, four 2025 schedules (January, April, July, October) | [MBTA GTFS archive](https://cdn.mbta.com/archive/archived_feeds.txt) |
+| ACS 2020–2024 5-year estimates: median household income (B19013), vehicles available (B08201) | [U.S. Census Bureau API](https://www.census.gov/data/developers.html) |
+| Census tracts, Massachusetts (TIGER/Line 2024) | [Census TIGER/Line](https://www.census.gov/geographies/mapping-files/time-series/geo/tiger-line-file.html) |
+| Street and path network | [OpenStreetMap](https://www.openstreetmap.org/) via OSMnx |
 
 ## Running it
 
@@ -120,7 +134,7 @@ python src/gwr.py            # a few minutes
 python src/ridership.py
 ```
 
-Map-ready GeoPackages for ArcGIS Pro or QGIS are written to `data/processed/gis/`. See [docs/arcgis_guide.md](docs/arcgis_guide.md) for the maps.
+Raw data and processed outputs are not committed because the files are large; the scripts recreate them. Map-ready GeoPackages for ArcGIS Pro or QGIS are written to `data/processed/gis/`. See [docs/arcgis_guide.md](docs/arcgis_guide.md) for the maps.
 
 ## Repo layout
 
@@ -135,11 +149,10 @@ data/processed/  cleaned outputs and GIS layers (gitignored)
 
 ## Status
 
-- [x] Data pipeline and cleaning
-- [x] Street-network walksheds
-- [x] Route and stop reliability, Census join
-- [x] Spatial statistics: hot spots, Moran's I, spatial regression, MGWR
-- [x] Passenger-weighted reliability
-- [ ] Maps in ArcGIS Pro
+- [x] Data pipeline and reliability scoring
+- [x] Street-network walksheds and Census join
+- [x] Spatial statistics, regression and MGWR
+- [x] Passenger-weighted reliability by car ownership and income
+- [ ] Maps in ArcGIS Pro (in progress)
 - [ ] StoryMap
 - [ ] Public write-up

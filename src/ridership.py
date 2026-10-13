@@ -43,6 +43,25 @@ RATING_START, RATING_END = "2025-08-24", "2025-12-13"
 TARGET = 0.70  # MBTA bus reliability target
 
 
+def quartile_table(con, stops, col, measure, labels):
+    """On-time rate by quartile of a stop's walkshed demographics, counted by bus and by rider."""
+    q = stops[["stop_id", col]].copy()
+    q["quartile"] = pd.qcut(q[col], 4, labels=labels).astype(str)
+    q["order"] = pd.qcut(q[col], 4, labels=False)
+    con.register("stop_q", q)
+    out = con.execute(f"""
+        SELECT quartile,
+               min({col}) AS range_low, max({col}) AS range_high,
+               avg(on_time::INT)                                         AS on_time_by_bus,
+               sum(on_time::INT * riders_on_bus) / sum(riders_on_bus)   AS on_time_by_rider
+        FROM crossings JOIN stop_q USING (stop_id)
+        WHERE riders_on_bus IS NOT NULL
+        GROUP BY quartile, "order" ORDER BY "order"
+    """).df()
+    con.unregister("stop_q")
+    return out.assign(measure=measure)[["measure", "quartile", "range_low", "range_high", "on_time_by_bus", "on_time_by_rider"]]
+
+
 def main():
     con = duckdb.connect()
     # GTFS id -> the route names used in the reliability data (741 -> SL1, 746 -> SLW, ...)
@@ -117,19 +136,14 @@ def main():
     RESULTS.mkdir(exist_ok=True)
     df.round(4).sort_values("weekday_boardings", ascending=False).to_csv(RESULTS / "ridership_reliability.csv", index=False)
 
-    # stop-level: passenger-weighted on-time rate by walkshed car-free quartile
-    stops = pd.read_csv(STOPS, dtype={"stop_id": str})[["stop_id", "share_no_vehicle"]].dropna()
-    stops["q"] = pd.qcut(stops.share_no_vehicle, 4, labels=["Q1 (fewest car-free)", "Q2", "Q3", "Q4 (most car-free)"])
-    con.register("stop_q", stops)
-    by_q = con.execute("""
-        SELECT q AS carfree_quartile,
-               avg(on_time::INT)                                         AS by_bus,
-               sum(on_time::INT * riders_on_bus) / sum(riders_on_bus)   AS by_rider,
-               sum(riders_on_bus)                                        AS rider_crossings
-        FROM crossings JOIN stop_q USING (stop_id)
-        WHERE riders_on_bus IS NOT NULL
-        GROUP BY 1 ORDER BY 1
-    """).df()
+    # stop-level: on-time rate by quartile of the stop walkshed's car-free share and income
+    stops = pd.read_csv(STOPS, dtype={"stop_id": str})
+    stops = stops[["stop_id", "share_no_vehicle", "avg_median_income"]].dropna()
+    by_q = pd.concat([
+        quartile_table(con, stops, "share_no_vehicle", "Car-free share", ["Fewest car-free", "Q2", "Q3", "Most car-free"]),
+        quartile_table(con, stops, "avg_median_income", "Income", ["Lowest income", "Q2", "Q3", "Highest income"]),
+    ])
+    by_q.round(4).to_csv(RESULTS / "reliability_by_quartile.csv", index=False)
 
     overall = con.execute("""
         SELECT avg(on_time::INT), sum(on_time::INT * riders_on_bus) / sum(riders_on_bus)
@@ -158,7 +172,7 @@ def main():
             include_groups=False,
         ).round(3).to_string(),
         "",
-        "By stop walkshed car-free quartile (on-time rate):",
+        "On-time rate by stop walkshed quartile (results/reliability_by_quartile.csv):",
         by_q.round(4).to_string(index=False),
     ]
     (RESULTS / "ridership_summary.txt").write_text("\n".join(lines), encoding="utf-8")

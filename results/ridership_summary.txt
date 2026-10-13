@@ -1,6 +1,6 @@
 Fall 2025 rating (2025-08-24 to 2025-12-13); ridership from the MBTA's Fall 2025 counts
 Timepoint crossings matched to a ridership trip: 7,598,256 of 7,915,267 (96.0%)
-Days in sample: {'Sun': 16, 'Sat': 16, 'Wkdy': 63, 'Fri': 16}
+Days in sample: {'Fri': 16, 'Sun': 16, 'Sat': 16, 'Wkdy': 63}
 
 On-time rate, counting buses:  68.7%
 On-time rate, counting riders: 67.6%
@@ -16,9 +16,13 @@ Q2                      37.0          54142.979                            0.574
 Q3                      37.0          90741.139                            0.445
 Q4 (most car-free)      37.0         152315.736                            0.168
 
-By stop walkshed car-free quartile (on-time rate):
-    carfree_quartile  by_bus  by_rider  rider_crossings
-Q1 (fewest car-free)  0.6206    0.5818     5.898408e+06
-                  Q2  0.6876    0.6704     1.549722e+07
-                  Q3  0.6882    0.6685     2.513662e+07
-  Q4 (most car-free)  0.6989    0.6905     4.144957e+07
+On-time rate by stop walkshed quartile (results/reliability_by_quartile.csv):
+       measure        quartile   range_low  range_high  on_time_by_bus  on_time_by_rider
+Car-free share Fewest car-free      0.0077      0.0917          0.6206            0.5818
+Car-free share              Q2      0.0923      0.1714          0.6876            0.6704
+Car-free share              Q3      0.1741      0.3283          0.6890            0.6685
+Car-free share   Most car-free      0.3285      0.7580          0.6983            0.6905
+        Income   Lowest income  27720.1861  84416.2586          0.6896            0.6739
+        Income              Q2  84481.9364 111750.6621          0.6864            0.6719
+        Income              Q3 111788.4715 144525.2955          0.6842            0.6703
+        Income  Highest income 144641.0543 250001.0000          0.6733            0.6776

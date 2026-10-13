@@ -1,0 +1,9 @@
+measure,quartile,range_low,range_high,on_time_by_bus,on_time_by_rider
+Car-free share,Fewest car-free,0.0077,0.0917,0.6206,0.5818
+Car-free share,Q2,0.0923,0.1714,0.6876,0.6704
+Car-free share,Q3,0.1741,0.3283,0.689,0.6685
+Car-free share,Most car-free,0.3285,0.758,0.6983,0.6905
+Income,Lowest income,27720.1861,84416.2586,0.6896,0.6739
+Income,Q2,84481.9364,111750.6621,0.6864,0.6719
+Income,Q3,111788.4715,144525.2955,0.6842,0.6703
+Income,Highest income,144641.0543,250001.0,0.6733,0.6776
