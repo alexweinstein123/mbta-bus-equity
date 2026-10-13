@@ -2,6 +2,10 @@
 
 An analysis of every MBTA bus timepoint in 2025, testing whether buses serving lower income and car-free neighborhoods run less reliably than buses serving wealthier, car-owning areas.
 
+![Map of 2025 MBTA bus on-time rates at timepoint stops over the share of households without a car](figures/map_bus_reliability.png)
+
+*Map made in ArcGIS Pro. [PDF version](figures/map_bus_reliability.pdf)*
+
 ## The question
 
 **Do MBTA buses serving lower income, lower car ownership neighborhoods run less reliably than buses serving wealthier areas?**
@@ -134,12 +138,21 @@ python src/gwr.py            # a few minutes
 python src/ridership.py
 ```
 
-Raw data and processed outputs are not committed because the files are large; the scripts recreate them. Map-ready GeoPackages for ArcGIS Pro or QGIS are written to `data/processed/gis/`. See [docs/arcgis_guide.md](docs/arcgis_guide.md) for the maps.
+Raw data and processed outputs are not committed because the files are large; the scripts recreate them. Map-ready GeoPackages for ArcGIS Pro or QGIS are written to `data/processed/gis/`.
+
+The map layout is generated with ArcPy, ArcGIS Pro's Python library, so it can be rebuilt in seconds when the data changes. It runs with ArcGIS Pro's own Python, against a Pro project containing the layers above:
+
+```
+"C:\Program Files\ArcGIS\Pro\bin\Python\envs\arcgispro-py3\python.exe" gis/make_layout.py PROJECT.aprx save
+```
+
+See [docs/arcgis_guide.md](docs/arcgis_guide.md) for building the maps in ArcGIS Pro.
 
 ## Repo layout
 
 ```
 src/             pipeline scripts, run in the order above
+gis/             ArcPy script that builds the map layout in ArcGIS Pro
 results/         output tables and model summaries
 docs/            ArcGIS Pro and StoryMap guide
 figures/         maps and charts for the write-up
@@ -153,6 +166,7 @@ data/processed/  cleaned outputs and GIS layers (gitignored)
 - [x] Street-network walksheds and Census join
 - [x] Spatial statistics, regression and MGWR
 - [x] Passenger-weighted reliability by car ownership and income
-- [ ] Maps in ArcGIS Pro (in progress)
+- [x] Main map in ArcGIS Pro: reliability by stop over car-free households
+- [ ] Hot spot map
 - [ ] StoryMap
 - [ ] Public write-up
