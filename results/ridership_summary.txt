@@ -1,0 +1,24 @@
+Fall 2025 rating (2025-08-24 to 2025-12-13); ridership from the MBTA's Fall 2025 counts
+Timepoint crossings matched to a ridership trip: 7,598,256 of 7,915,267 (96.0%)
+Days in sample: {'Sun': 16, 'Sat': 16, 'Wkdy': 63, 'Fri': 16}
+
+On-time rate, counting buses:  68.7%
+On-time rate, counting riders: 67.6%
+
+Weekday (Mon-Thu) boardings on the 148 routes analyzed: 326,753
+Routes below the MBTA's 70% target in 2025: 92 of 148, carrying 115,291 weekday boardings (35%)
+
+By route car-free quartile:
+                      routes  weekday_boardings  share_of_boardings_below_target
+carfree_quartile                                                                
+Q1 (fewest car-free)    37.0          29552.951                            0.619
+Q2                      37.0          54142.979                            0.574
+Q3                      37.0          90741.139                            0.445
+Q4 (most car-free)      37.0         152315.736                            0.168
+
+By stop walkshed car-free quartile (on-time rate):
+    carfree_quartile  by_bus  by_rider  rider_crossings
+Q1 (fewest car-free)  0.6206    0.5818     5.898408e+06
+                  Q2  0.6876    0.6704     1.549722e+07
+                  Q3  0.6882    0.6685     2.513662e+07
+  Q4 (most car-free)  0.6989    0.6905     4.144957e+07

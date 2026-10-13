@@ -151,6 +151,39 @@ def regressions(gdf, w):
     return "\n".join(lines), chosen
 
 
+def carfree_sensitivity(gdf):
+    """How the car-free relationship changes as controls are added (OLS, robust standard errors).
+
+    The sign flips once distance to downtown is controlled for: car-free areas
+    are mostly close in, where routes are short and more reliable.
+    """
+    import statsmodels.formula.api as smf
+
+    d = gdf.dropna(subset=["share_no_vehicle", "avg_median_income"]).copy()
+    d["carfree_10pts"] = d.share_no_vehicle * 10
+    d["income_10k"] = d.avg_median_income / 10_000
+    d["log_hh_per_km2"] = np.log1p(d.hh_per_km2)
+    test_type = "share_frequent + share_origin + share_destination"
+    specs = {
+        "No controls": "carfree_10pts",
+        "+ income": "carfree_10pts + income_10k",
+        "+ distance to downtown": "carfree_10pts + income_10k + km_to_downtown",
+        "+ on-time test type only": f"carfree_10pts + income_10k + {test_type}",
+        "Full model": f"carfree_10pts + income_10k + km_to_downtown + log_hh_per_km2 + routes + {test_type}",
+    }
+    rows = []
+    for label, rhs in specs.items():
+        m = smf.ols(f"on_time_rate ~ {rhs}", d).fit(cov_type="HC1")
+        rows.append({
+            "model": label,
+            "carfree_effect_pts_per_10": m.params["carfree_10pts"] * 100,
+            "std_error_pts": m.bse["carfree_10pts"] * 100,
+            "p_value": m.pvalues["carfree_10pts"],
+            "n": int(m.nobs),
+        })
+    return pd.DataFrame(rows)
+
+
 def main():
     rel = stop_reliability()
     pts = stop_points().merge(rel, on="stop_id")  # drops virtual timepoints (bridges, tunnels) that aren't real stops
@@ -164,6 +197,8 @@ def main():
 
     RESULTS.mkdir(exist_ok=True)
     (RESULTS / "spatial_regression.txt").write_text(report, encoding="utf-8")
+    sens = carfree_sensitivity(pts)
+    sens.round(4).to_csv(RESULTS / "carfree_sensitivity.csv", index=False)
     cols = [c for c in pts.columns if c not in ("geometry", "stop_lat", "stop_lon")]
     pts[cols].round(4).sort_values("on_time_rate").to_csv(RESULTS / "stop_reliability.csv", index=False)
     GIS.mkdir(parents=True, exist_ok=True)
@@ -172,6 +207,8 @@ def main():
     print(f"{len(pts):,} stops analyzed")
     print(pts.hot_spot.value_counts().to_string())
     print(f"Model: {'spatial ' + chosen if chosen else 'OLS'}; full output in results/spatial_regression.txt")
+    print("\nCar-free effect as controls are added (results/carfree_sensitivity.csv):")
+    print(sens.round(3).to_string(index=False))
 
 
 if __name__ == "__main__":

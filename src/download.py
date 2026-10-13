@@ -25,6 +25,8 @@ RAW = ROOT / "data" / "raw"
 BUS_ITEMS = {
     2025: "924df13d845f4907bb6a6c3ed380d57a",
 }
+# "MBTA Bus Ridership by Trip, Season, Route, Line, and Stop" (CC0), Fall 2016 through Fall 2025
+RIDERSHIP_ITEM = "8daf4a33925a4df59183f860826d29ee"
 GTFS_URL = "https://cdn.mbta.com/MBTA_GTFS.zip"
 GTFS_ARCHIVE_INDEX = "https://cdn.mbta.com/archive/archived_feeds.txt"
 # One schedule per season, so route stop lists match how each route ran in 2025
@@ -81,6 +83,15 @@ def bus():
             unzip(z, out)
 
 
+def ridership():
+    print("Bus ridership by trip, season, route and stop")
+    url = f"https://www.arcgis.com/sharing/rest/content/items/{RIDERSHIP_ITEM}/data"
+    z = fetch(url, RAW / "ridership" / "MBTA_Bus_Ridership_by_Trip_Season_Route_Line_and_Stop.zip")
+    out = RAW / "ridership" / "extracted"
+    if not out.exists():
+        unzip(z, out)
+
+
 def gtfs():
     print("MBTA GTFS static feed")
     z = fetch(GTFS_URL, RAW / "gtfs" / "MBTA_GTFS.zip")
@@ -135,7 +146,7 @@ def acs():
     print(f"  {len(df):,} tracts -> {dest.relative_to(ROOT)}")
 
 
-SOURCES = {"bus": bus, "gtfs": gtfs, "gtfs_2025": gtfs_2025, "tracts": tracts, "acs": acs}
+SOURCES = {"bus": bus, "ridership": ridership, "gtfs": gtfs, "gtfs_2025": gtfs_2025, "tracts": tracts, "acs": acs}
 
 if __name__ == "__main__":
     wanted = sys.argv[1:] or list(SOURCES)
