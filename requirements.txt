@@ -8,3 +8,8 @@ requests
 python-dotenv
 jupyterlab
 folium
+osmnx
+libpysal
+esda
+spreg
+mapclassify

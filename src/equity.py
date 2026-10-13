@@ -3,14 +3,18 @@
 Usage:
     python src/equity.py
 
-Needs clean.py to have run first. Writes results/route_equity.csv, one row
-per route with its 2025 reliability and the demographics of its catchment.
+Needs clean.py and walksheds.py to have run first. Writes
+results/route_equity.csv, one row per route with its 2025 reliability and the
+demographics of its catchment, and route layers for ArcGIS Pro in
+data/processed/gis/routes.gpkg.
 
 Method:
   - A route's stops are every stop its trips served in four seasonal 2025
     GTFS schedules (January, April, July, October).
-  - Its catchment is the union of quarter-mile (402 m) circles around those
-    stops, the standard planning assumption for walking to a bus.
+  - Its catchment is the union of its stops' street-network walksheds: the
+    area within a quarter-mile (402 m) walk on real streets (see walksheds.py).
+    The simpler quarter-mile-circle version is kept alongside as a robustness
+    check (columns ending in _circle).
   - Census counts (households, households with no vehicle) are apportioned
     from tracts to the catchment by area. Income is the household-weighted
     average of tract median incomes, which approximates the typical income
@@ -22,11 +26,14 @@ from pathlib import Path
 import duckdb
 import geopandas as gpd
 import pandas as pd
+from shapely import LineString
 
 ROOT = Path(__file__).resolve().parents[1]
 RAW = ROOT / "data" / "raw"
 TIMEPOINTS = ROOT / "data" / "processed" / "timepoints_2025.parquet"
+WALKSHEDS = ROOT / "data" / "processed" / "stop_walksheds.gpkg"
 OUT = ROOT / "results" / "route_equity.csv"
+GIS = ROOT / "data" / "processed" / "gis"
 
 WALK_M = 402.336  # quarter mile
 MA_METERS = "EPSG:26986"  # Massachusetts State Plane, meters
@@ -88,8 +95,31 @@ def tracts_with_acs():
     return tracts
 
 
-def catchment_demographics(stops, tracts):
-    catchments = stops.assign(geometry=stops.buffer(WALK_M)).dissolve(by="route_id")[["geometry"]].reset_index()
+def circle_catchments(stops):
+    return stops.assign(geometry=stops.buffer(WALK_M)).dissolve(by="route_id")[["geometry"]].reset_index()
+
+
+def walkshed_catchments(stops):
+    sheds = gpd.read_file(WALKSHEDS)[["stop_id", "geometry"]]
+    return sheds.merge(stops[["route_id", "stop_id"]], on="stop_id").dissolve(by="route_id")[["geometry"]].reset_index()
+
+
+def route_lines(data_routes):
+    """Route shapes from the October 2025 schedule, for mapping."""
+    feed = RAW / "gtfs_2025" / "20251015"
+    routes = pd.read_csv(feed / "routes.txt", dtype=str)
+    routes["key"] = [r if r in data_routes else s for r, s in zip(routes.route_id, routes.route_short_name)]
+    trips = pd.read_csv(feed / "trips.txt", dtype=str, usecols=["route_id", "shape_id"]).drop_duplicates()
+    trips = trips.merge(routes[routes.key.isin(data_routes)][["route_id", "key"]], on="route_id")
+    pts = pd.read_csv(feed / "shapes.txt", dtype={"shape_id": str}).sort_values(["shape_id", "shape_pt_sequence"])
+    pts = pts[pts.shape_id.isin(trips.shape_id)]
+    shapes = pts.groupby("shape_id")[["shape_pt_lon", "shape_pt_lat"]].apply(lambda g: LineString(g.values))
+    lines = gpd.GeoDataFrame({"shape_id": shapes.index}, geometry=shapes.values, crs="EPSG:4326")
+    lines = lines.merge(trips[["shape_id", "key"]], on="shape_id").rename(columns={"key": "route_id"})
+    return lines.dissolve(by="route_id")[["geometry"]].reset_index().to_crs(MA_METERS)
+
+
+def catchment_demographics(catchments, tracts):
     pieces = gpd.overlay(catchments, tracts, how="intersection")
     share = pieces.area / pieces.tract_area
     pieces["hh"] = pieces.households * share
@@ -105,22 +135,35 @@ def catchment_demographics(stops, tracts):
     )
     out["share_no_vehicle"] = out.catchment_hh_no_vehicle / out.catchment_households
     out["avg_median_income"] = out.income_x_hh / out.hh_with_income
-    out["stops"] = stops.groupby("route_id").size()
     return out.drop(columns=["income_x_hh", "hh_with_income"]).reset_index()
 
 
 def main():
     rel = route_reliability()
     stops = route_stops(set(rel.route_id))
-    demo = catchment_demographics(stops, tracts_with_acs())
+    tracts = tracts_with_acs()
+    sheds = walkshed_catchments(stops)
+    demo = catchment_demographics(sheds, tracts)
+    circles = catchment_demographics(circle_catchments(stops), tracts)
 
-    df = rel.merge(demo, on="route_id", how="inner")
+    df = (
+        rel.merge(stops.groupby("route_id").size().rename("stops").reset_index(), on="route_id")
+        .merge(demo, on="route_id")
+        .merge(circles[["route_id", "share_no_vehicle", "avg_median_income"]], on="route_id", suffixes=("", "_circle"))
+    )
     dropped = sorted(set(rel.route_id) - set(df.route_id))
     print(f"{len(df)} routes matched to 2025 schedules; set aside {len(dropped)} special/shuttle routes: {', '.join(dropped)}")
 
     OUT.parent.mkdir(exist_ok=True)
     df.sort_values("on_time_rate").round(4).to_csv(OUT, index=False)
     print(f"Wrote {OUT.relative_to(ROOT)}")
+
+    GIS.mkdir(parents=True, exist_ok=True)
+    gpkg = GIS / "routes.gpkg"
+    route_lines(set(df.route_id)).merge(df, on="route_id").to_file(gpkg, layer="bus_routes", driver="GPKG")
+    sheds.merge(df, on="route_id").to_file(gpkg, layer="route_walksheds", driver="GPKG")
+    tracts.to_file(gpkg, layer="tracts_acs", driver="GPKG")
+    print(f"Wrote {gpkg.relative_to(ROOT)} (bus_routes, route_walksheds, tracts_acs)")
 
 
 if __name__ == "__main__":

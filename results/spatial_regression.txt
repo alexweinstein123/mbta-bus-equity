@@ -1,0 +1,101 @@
+Stops analyzed: 1,103  (timepoint stops scored at least 500 times)
+Spatial weights: 8 nearest neighbors, row-standardized
+
+Moran's I of on-time rate: 0.164  (pseudo p = 0.0001)
+
+REGRESSION RESULTS
+------------------
+
+SUMMARY OF OUTPUT: ORDINARY LEAST SQUARES
+------------------------------------------------------------------------------------
+Data set            :       stops
+Weights matrix      :        knn8
+Dependent Variable  :on_time_rate                Number of Observations:        1103
+Mean dependent var  :      0.6565                Number of Variables   :           9
+S.D. dependent var  :      0.1251                Degrees of Freedom    :        1094
+R-squared           :      0.1825
+Adjusted R-squared  :      0.1765
+Sum squared residual:     14.1007                F-statistic           :     30.5331
+Sigma-square        :       0.013                Prob(F-statistic)     :   2.287e-43
+S.E. of regression  :       0.114                Log likelihood        :     839.210
+Sigma-square ML     :       0.013                Akaike info criterion :   -1660.420
+S.E of regression ML:      0.1131                Schwarz criterion     :   -1615.368
+
+------------------------------------------------------------------------------------
+            Variable     Coefficient       Std.Error     t-Statistic     Probability
+------------------------------------------------------------------------------------
+            CONSTANT         0.69305         0.04731        14.64950         0.00000
+    share_no_vehicle        -0.14930         0.03398        -4.39380         0.00001
+          income_10k         0.00018         0.00092         0.18976         0.84953
+      km_to_downtown        -0.00445         0.00094        -4.73058         0.00000
+      log_hh_per_km2         0.00180         0.00500         0.36115         0.71806
+              routes        -0.00222         0.00228        -0.97117         0.33168
+      share_frequent         0.11912         0.01017        11.71068         0.00000
+        share_origin        -0.07900         0.01546        -5.11036         0.00000
+   share_destination         0.08540         0.01783         4.79091         0.00000
+------------------------------------------------------------------------------------
+
+REGRESSION DIAGNOSTICS
+MULTICOLLINEARITY CONDITION NUMBER          40.963
+
+TEST ON NORMALITY OF ERRORS
+TEST                             DF        VALUE           PROB
+Jarque-Bera                       2          8.635           0.0133
+
+DIAGNOSTICS FOR HETEROSKEDASTICITY
+RANDOM COEFFICIENTS
+TEST                             DF        VALUE           PROB
+Breusch-Pagan test                8         95.856           0.0000
+Koenker-Bassett test              8         87.509           0.0000
+
+DIAGNOSTICS FOR SPATIAL DEPENDENCE
+- SARERR -
+TEST                           MI/DF       VALUE           PROB
+Moran's I (error)              0.1274        9.546           0.0000
+Lagrange Multiplier (lag)         1         49.569           0.0000
+Robust LM (lag)                   1          7.941           0.0048
+Lagrange Multiplier (error)       1         81.859           0.0000
+Robust LM (error)                 1         40.230           0.0000
+Lagrange Multiplier (SARMA)       2         89.799           0.0000
+
+- Spatial Durbin -
+TEST                              DF       VALUE           PROB
+LM test for WX                    8         20.856           0.0075
+Robust LM WX test                 8         53.146           0.0000
+Lagrange Multiplier (lag)         1         49.569           0.0000
+Robust LM Lag - SDM               1         81.859           0.0000
+Joint test for SDM                9        102.715           0.0000
+================================ END OF REPORT =====================================
+
+Robust LM tests favor a spatial error model (robust LM p: error 0.0000, lag 0.0048)
+
+REGRESSION RESULTS
+------------------
+
+SUMMARY OF OUTPUT: ML SPATIAL ERROR (METHOD = full)
+------------------------------------------------------------------------------------
+Data set            :       stops
+Weights matrix      :        knn8
+Dependent Variable  :on_time_rate                Number of Observations:        1103
+Mean dependent var  :      0.6565                Number of Variables   :           9
+S.D. dependent var  :      0.1251                Degrees of Freedom    :        1094
+Pseudo R-squared    :      0.1810
+Log likelihood      :    866.6576
+Sigma-square ML     :      0.0120                Akaike info criterion :   -1715.315
+S.E of regression   :      0.1094                Schwarz criterion     :   -1670.263
+
+------------------------------------------------------------------------------------
+            Variable     Coefficient       Std.Error     z-Statistic     Probability
+------------------------------------------------------------------------------------
+            CONSTANT         0.70130         0.05890        11.90634         0.00000
+    share_no_vehicle        -0.15029         0.04496        -3.34288         0.00083
+          income_10k        -0.00034         0.00119        -0.28628         0.77466
+      km_to_downtown        -0.00432         0.00128        -3.38217         0.00072
+      log_hh_per_km2         0.00077         0.00617         0.12471         0.90076
+              routes        -0.00023         0.00231        -0.10038         0.92004
+      share_frequent         0.12685         0.01083        11.71429         0.00000
+        share_origin        -0.08959         0.01546        -5.79421         0.00000
+   share_destination         0.08473         0.01703         4.97531         0.00000
+              lambda         0.36771         0.04740         7.75730         0.00000
+------------------------------------------------------------------------------------
+================================ END OF REPORT =====================================
