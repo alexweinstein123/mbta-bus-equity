@@ -13,6 +13,8 @@ legend in a right-hand column, and a source line with the basemap credits.
 
   main      "Bus reliability" map: timepoint stops by on-time rate over car-free
             households, with an inset of downtown Boston and Cambridge.
+  carfree   "Car-free households" map: the context map of households without a car,
+            with the same inset.
   hotspots  "Hot spots" map: the Hot Spot Analysis (Getis-Ord Gi*) output run in
             ArcGIS Pro on the stops layer, with labels on the main clusters.
 
@@ -52,6 +54,16 @@ LAYOUTS = {
         "title": "Buses run least reliably in outer, car-owning areas, not in car-free neighborhoods",
         "subtitle": "Share of 2025 bus timepoints on time, over the share of households without a car",
         "source": "On time per MBTA Service Delivery Policy standards (target: 70%). Tracts with fewer than 100 households hatched. ",
+        "inset": ("Downtown Boston and Cambridge", (-71.078, 42.352), 3800),
+    },
+    "carfree": {
+        "name": "Context map - car-free households",
+        "map": "Car-free households",
+        "file": "map_carfree_households",
+        "title": "Car-free households are concentrated in Boston's core",
+        "subtitle": "Share of households without a car by census tract, with MBTA bus routes",
+        "data": "Data: U.S. Census Bureau ACS 2020–2024 5-year estimates; MBTA GTFS, October 2025. ",
+        "source": "Tracts with fewer than 100 households hatched. ",
         "inset": ("Downtown Boston and Cambridge", (-71.078, 42.352), 3800),
     },
     "hotspots": {
@@ -131,6 +143,14 @@ def prepare_main(p, m):
     return stops
 
 
+def prepare_carfree(p, m):
+    lyr = {l.name: l for l in m.listLayers()}
+    m.moveLayer(lyr["Households without a car"], lyr["Fewer than 100 households"], "AFTER")
+    routes = layer_by_source(m, "bus_routes")
+    routes.transparency = 50  # context only on this map
+    return routes  # frame on the bus network, like the other maps
+
+
 def prepare_hotspots(p, m):
     clusters = next(l for l in m.listLayers() if l.isFeatureLayer and l.visible and "hotspots" in l.dataSource.lower())
     clusters.name = "Reliability clusters"
@@ -157,7 +177,7 @@ def prepare_hotspots(p, m):
 def build(p, key, mode):
     cfg = LAYOUTS[key]
     m = p.listMaps(cfg["map"])[0]
-    data_layer = prepare_main(p, m) if key == "main" else prepare_hotspots(p, m)
+    data_layer = {"main": prepare_main, "carfree": prepare_carfree, "hotspots": prepare_hotspots}[key](p, m)
 
     for old in p.listLayouts(cfg["name"]):
         p.deleteItem(old)
@@ -239,7 +259,7 @@ def build(p, key, mode):
     credits = f'Map: Alex Weinstein, 2026. Basemap <dyn type="layout" name="{cfg["name"]}" property="serviceLayerCredits"/>'
     text(p, lyt, M, H - M - 0.36, cfg["title"], 18, "Bold", name="Title")
     text(p, lyt, M, H - M - 0.68, cfg["subtitle"], 11.5, color=MUTED, name="Subtitle")
-    text(p, lyt, M, 0.22, DATA + cfg["source"] + credits, 7, color=MUTED, name="Source", width=W - 2 * M)
+    text(p, lyt, M, 0.22, cfg.get("data", DATA) + cfg["source"] + credits, 7, color=MUTED, name="Source", width=W - 2 * M)
 
     if mode == "preview":
         out = Path(tempfile.gettempdir()) / f"{cfg['file']}_preview.png"
