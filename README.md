@@ -22,7 +22,7 @@ The hypothesis was **not supported**. Reliability problems follow geography more
 2. **Income makes no difference.** Weighted by riders, on-time performance is between **67% and 68% in every income quartile**, and income has no significant effect in any model.
 3. **Car-free neighborhoods get better reliability, not worse.** Weighted by riders, buses in the most car-free quarter of neighborhoods were on time **69%** of the time, against **58%** in the least car-free quarter.
 4. **That advantage comes from location.** Car-free neighborhoods are close to downtown, where routes are short and frequent. Comparing stops at a similar distance from downtown, more car-free households go with *slightly lower* reliability, about 1 to 1.5 points per 10 points of car-free share. This holds only once location is accounted for.
-5. **The worst service is in the outer network.** Hot spot analysis finds significant clusters of poor reliability around Alewife, Lynn and Route 1 north, in areas with average car ownership and income.
+5. **The worst service is in the outer network.** Hot spot analysis finds significant clusters of poor reliability around Alewife and North Cambridge, Lynn and Route 1 north, on average 12 km from downtown and slightly more car-owning than the network as a whole. Clusters of *good* reliability are in Chelsea, East Boston and Harvard Square, which are more car-free (27% vs 22%) and lower-income ($94k vs $112k median).
 6. **The MBTA's on-time standard favors the core.** Frequent routes are judged by a more lenient spacing test than infrequent ones, and frequent-test stops score about 10 points higher (74% vs 63%).
 
 **In short:** riders in the outer, car-owning parts of the network get the least reliable service. Car-free riders benefit from living near the core, but among places at a similar distance from downtown, they fare slightly worse, and part of the core's advantage comes from how reliability is measured.
@@ -78,7 +78,7 @@ The car-free effect flips sign once distance to downtown is included (car-free s
 
 **Spatial analysis.** The unit is the timepoint stop, where reliability is measured: 1,103 stops with at least 500 scored crossings.
 - **Moran's I = 0.164** (p < 0.001): nearby stops have similar reliability.
-- **Getis-Ord Gi\* hot spots** (8 nearest neighbors, false discovery rate correction): 66 stops in clusters of poor reliability, 101 in clusters of good reliability.
+- **Getis-Ord Gi\* hot spots** (8 nearest neighbors, two-tailed, false discovery rate correction): 34 stops in clusters of poor reliability, 57 in clusters of good reliability. Run independently in ArcGIS Pro and in Python (PySAL) with the same settings, the results are identical: z-scores correlate at 0.9999 and every stop lands in the same class.
 - **Spatial error model:** chosen by Lagrange multiplier tests on OLS residuals, with heteroskedasticity-robust errors.
 - **Multiscale GWR:** baseline reliability varies very locally (bandwidth 95 of 1,103 stops), while the car-free relationship is the same across the network. Fit improves from R² 0.18 to 0.34.
 

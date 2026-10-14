@@ -11,9 +11,11 @@ from that stop's street-network walkshed. Writes:
   data/processed/gis/stops.gpkg       the same, as points for ArcGIS Pro
 
 Steps:
-  1. Getis-Ord Gi* hot spot analysis on stop on-time rates, the same statistic
-     as ArcGIS Pro's Hot Spot Analysis tool, with a false discovery rate
-     correction for testing many stops at once.
+  1. Getis-Ord Gi* hot spot analysis on stop on-time rates, matching ArcGIS
+     Pro's Hot Spot Analysis tool: two-tailed p-values from the Gi* z-score
+     (clusters can be high or low), with a false discovery rate correction for
+     testing many stops at once. Run in ArcGIS Pro with the same settings, the
+     z-scores correlate at 0.9999.
   2. Global Moran's I: do nearby stops have similar reliability?
   3. OLS of on-time rate on walkshed car-free share and income, with controls,
      plus Lagrange multiplier tests for spatial dependence in the residuals.
@@ -29,6 +31,7 @@ import pandas as pd
 from esda.getisord import G_Local
 from esda.moran import Moran
 from libpysal.weights import KNN
+from scipy.stats import norm
 from spreg import ML_Error, ML_Lag, OLS
 
 import equity
@@ -92,12 +95,14 @@ def walkshed_demographics(stop_ids):
 
 
 def hot_spots(gdf, w):
-    g = G_Local(gdf.on_time_rate.values, w, star=True, transform="B", permutations=9999, seed=SEED)
+    g = G_Local(gdf.on_time_rate.values, w, star=True, transform="B", permutations=0)
     gdf["gi_z"] = g.Zs
-    gdf["gi_p"] = g.p_sim
+    # two-tailed: a stop can sit in a cluster of high or of low on-time rates
+    p = 2 * norm.sf(np.abs(g.Zs))
+    gdf["gi_p"] = p
     # Benjamini-Hochberg false discovery rate, as ArcGIS Pro's "Apply False Discovery Rate Correction" option
-    order = np.argsort(g.p_sim)
-    ranked = g.p_sim[order] * len(g.p_sim) / (np.arange(len(g.p_sim)) + 1)
+    order = np.argsort(p)
+    ranked = p[order] * len(p) / (np.arange(len(p)) + 1)
     q = np.empty_like(ranked)
     q[order] = np.minimum.accumulate(ranked[::-1])[::-1]
     gdf["gi_q"] = np.clip(q, 0, 1)
