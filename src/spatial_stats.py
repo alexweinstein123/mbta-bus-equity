@@ -156,6 +156,49 @@ def regressions(gdf, w):
     return "\n".join(lines), chosen
 
 
+# named clusters on the hot spot map: (center lon, lat, radius km, cluster type)
+CLUSTERS = {
+    "Alewife and North Cambridge": (-71.14, 42.395, 3.0, "Unreliable"),
+    "Lynn and Saugus": (-70.98, 42.47, 4.5, "Unreliable"),
+    "Chelsea, East Boston and Winthrop": (-71.01, 42.38, 4.5, "Reliable"),
+}
+
+
+def cluster_profiles(gdf):
+    """Who lives around each named cluster, which routes run through it, and which on-time tests its stops face."""
+    pts = gdf.to_crs(4326)
+    lon, lat = pts.geometry.x, pts.geometry.y
+    route_otp = duckdb.sql(f"""
+        SELECT stop_id, route_id, count(*) AS crossings FROM '{TIMEPOINTS.as_posix()}'
+        WHERE on_time IS NOT NULL GROUP BY ALL
+    """).df()
+    yearly = duckdb.sql(f"""
+        SELECT route_id, avg(on_time::INT) AS otp FROM '{TIMEPOINTS.as_posix()}' GROUP BY 1
+    """).df().set_index("route_id").otp
+    rows = []
+    for name, (clon, clat, km, kind) in CLUSTERS.items():
+        dist_km = np.hypot((lon - clon) * 111.32 * np.cos(np.radians(clat)), (lat - clat) * 110.57)
+        c = gdf[(dist_km <= km).values & gdf.hot_spot.str.startswith(kind).values]
+        top = (route_otp[route_otp.stop_id.isin(c.stop_id)].groupby("route_id").crossings.sum()
+               .sort_values(ascending=False).head(5))
+        rows.append({
+            "cluster": name, "type": kind, "stops": len(c),
+            "on_time_rate": c.on_time_rate.mean(),
+            "share_no_vehicle": c.share_no_vehicle.mean(),
+            "median_income": c.avg_median_income.median(),
+            "share_origin_crossings": c.share_origin.mean(),
+            "share_frequent_crossings": c.share_frequent.mean(),
+            "main_routes": "; ".join(f"{r} ({yearly[r]:.0%})" for r in top.index),
+        })
+    rows.append({
+        "cluster": "All stops", "type": "", "stops": len(gdf), "on_time_rate": gdf.on_time_rate.mean(),
+        "share_no_vehicle": gdf.share_no_vehicle.mean(), "median_income": gdf.avg_median_income.median(),
+        "share_origin_crossings": gdf.share_origin.mean(), "share_frequent_crossings": gdf.share_frequent.mean(),
+        "main_routes": "",
+    })
+    return pd.DataFrame(rows)
+
+
 def carfree_sensitivity(gdf):
     """How the car-free relationship changes as controls are added (OLS, robust standard errors).
 
@@ -206,6 +249,8 @@ def main():
     (RESULTS / "spatial_regression.txt").write_text(report, encoding="utf-8")
     sens = carfree_sensitivity(pts)
     sens.round(4).to_csv(RESULTS / "carfree_sensitivity.csv", index=False)
+    clusters = cluster_profiles(pts)
+    clusters.round(3).to_csv(RESULTS / "cluster_profiles.csv", index=False)
     cols = [c for c in pts.columns if c not in ("geometry", "stop_lat", "stop_lon")]
     pts[cols].round(4).sort_values("on_time_rate").to_csv(RESULTS / "stop_reliability.csv", index=False)
     GIS.mkdir(parents=True, exist_ok=True)

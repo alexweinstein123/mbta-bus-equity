@@ -22,10 +22,11 @@ The hypothesis was **not supported**. Reliability problems follow geography more
 2. **Income makes no difference.** Weighted by riders, on-time performance is between **67% and 68% in every income quartile**, and income has no significant effect in any model.
 3. **Car-free neighborhoods get better reliability, not worse.** Weighted by riders, buses in the most car-free quarter of neighborhoods were on time **69%** of the time, against **58%** in the least car-free quarter.
 4. **That advantage comes from location.** Car-free neighborhoods are close to downtown, where routes are short and frequent. Comparing stops at a similar distance from downtown, more car-free households go with *slightly lower* reliability, about 1 to 1.5 points per 10 points of car-free share. This holds only once location is accounted for.
-5. **The worst service is in the outer network.** Hot spot analysis finds significant clusters of poor reliability around Alewife and North Cambridge, Lynn and Route 1 north, on average 12 km from downtown and slightly more car-owning than the network as a whole. Clusters of *good* reliability are in Chelsea, East Boston and Harvard Square, which are more car-free (27% vs 22%) and lower-income ($94k vs $112k median).
-6. **The MBTA's on-time standard favors the core.** Frequent routes are judged by a more lenient spacing test than infrequent ones, and frequent-test stops score about 10 points higher (74% vs 63%).
+5. **Unreliability is mostly route by route, not regional.** Only **8% of stops** sit in a statistically significant cluster of good or poor reliability. Whether a stop is reliable depends mostly on the routes that serve it, not the area around it.
+6. **The worst clusters are Lynn and Alewife, for different reasons.** Around **Lynn and Saugus** (12 stops, 53% on time) the routes themselves perform poorly all year: **455** (51%), **426** (59%) and **450** (55%). It's a lower-income area ($85k median income vs $112k), making it the clearest equity case in the data, and an exception to income making no difference network-wide. Around **Alewife** (11 stops, 51% on time), 45% of scored crossings are departures from the terminal, which face the MBTA's strictest test, so part of that cluster reflects how buses are scored.
+7. **How the MBTA measures reliability shapes where problems show up.** Frequent routes are judged by a lenient spacing test, and frequent-test stops score about 10 points higher (74% vs 63%). First-stop departures face the strictest test: 0 to 3 minutes late, never early. The most reliable cluster, **Chelsea, East Boston and Winthrop** (36 stops, 77% on time), runs on the network's strongest routes, **111** (82%) and **SL3** (78%), but 68% of its crossings are judged by the lenient test, against 23% network-wide.
 
-**In short:** riders in the outer, car-owning parts of the network get the least reliable service. Car-free riders benefit from living near the core, but among places at a similar distance from downtown, they fare slightly worse, and part of the core's advantage comes from how reliability is measured.
+**In short:** unreliable service concentrates on specific routes and terminals in the outer network, most clearly in Lynn, rather than in car-free or lower-income neighborhoods overall. Car-free riders benefit from living near the core, though among places at a similar distance from downtown they fare slightly worse, and part of the core's advantage comes from how the MBTA measures reliability.
 
 ### On-time rate by neighborhood (Fall 2025, weighted by riders)
 
@@ -50,7 +51,22 @@ Stop-level OLS with robust standard errors (`results/carfree_sensitivity.csv`). 
 | + on-time test type only | −0.3 | 0.17 | +0.2 | 0.06 |
 | Full model | −1.5 | <0.001 | 0.0 | 0.84 |
 
-The car-free effect flips sign once distance to downtown is included (car-free share and distance correlate at −0.68). Income never matters.
+The car-free effect flips sign once distance to downtown is included (car-free share and distance correlate at −0.68). Income has no significant effect in any model.
+
+### Where reliability clusters
+
+![Map of statistically significant clusters of bus on-time rates](figures/map_reliability_clusters.png)
+
+*Hot Spot Analysis (Getis-Ord Gi\*) in ArcGIS Pro, replicated in Python with identical results. [PDF version](figures/map_reliability_clusters.pdf)*
+
+| Cluster | Stops | On time | Car-free | Median income | Terminal departures* | Frequent-route test* | Main routes (2025 on-time rate) |
+|---|---|---|---|---|---|---|---|
+| Alewife and North Cambridge | 11 | 51% | 29% | $148k | **45%** | 0% | 83 (66%), 74 (74%), 78 (65%), 62 (57%), 67 (67%) |
+| Lynn and Saugus | 12 | 53% | 18% | **$85k** | 22% | 13% | **455 (51%)**, 426 (59%), 429 (62%), 442 (61%), 450 (55%) |
+| Chelsea, East Boston and Winthrop | 36 | 77% | 26% | $81k | 11% | **68%** | 111 (82%), SL3 (78%), 116 (77%), 104 (80%), 110 (81%) |
+| All stops | 1,117 | 66% | 22% | $112k | 11% | 23% | |
+
+\*Share of the cluster's scored crossings that are first-stop departures (strictest test) or judged by the frequent-route spacing test (most lenient). Source: `results/cluster_profiles.csv`
 
 ## How I did it
 
@@ -140,7 +156,7 @@ python src/ridership.py
 
 Raw data and processed outputs are not committed because the files are large; the scripts recreate them. Map-ready GeoPackages for ArcGIS Pro or QGIS are written to `data/processed/gis/`.
 
-The map layout is generated with ArcPy, ArcGIS Pro's Python library, so it can be rebuilt in seconds when the data changes. It runs with ArcGIS Pro's own Python, against a Pro project containing the layers above:
+The map layouts are generated with ArcPy, ArcGIS Pro's Python library, so they can be rebuilt in seconds when the data changes. The script runs with ArcGIS Pro's own Python, against a Pro project containing the layers above:
 
 ```
 "C:\Program Files\ArcGIS\Pro\bin\Python\envs\arcgispro-py3\python.exe" gis/make_layout.py PROJECT.aprx save
@@ -152,7 +168,7 @@ See [docs/arcgis_guide.md](docs/arcgis_guide.md) for building the maps in ArcGIS
 
 ```
 src/             pipeline scripts, run in the order above
-gis/             ArcPy script that builds the map layout in ArcGIS Pro
+gis/             ArcPy script that builds the map layouts in ArcGIS Pro
 results/         output tables and model summaries
 docs/            ArcGIS Pro and StoryMap guide
 figures/         maps and charts for the write-up
@@ -167,6 +183,6 @@ data/processed/  cleaned outputs and GIS layers (gitignored)
 - [x] Spatial statistics, regression and MGWR
 - [x] Passenger-weighted reliability by car ownership and income
 - [x] Main map in ArcGIS Pro: reliability by stop over car-free households
-- [ ] Hot spot map
+- [x] Hot spot map in ArcGIS Pro, replicated in Python
 - [ ] StoryMap
 - [ ] Public write-up

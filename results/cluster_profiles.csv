@@ -1,0 +1,5 @@
+cluster,type,stops,on_time_rate,share_no_vehicle,median_income,share_origin_crossings,share_frequent_crossings,main_routes
+Alewife and North Cambridge,Unreliable,11,0.508,0.285,148419.439,0.454,0.002,83 (66%); 74 (74%); 78 (65%); 62 (57%); 67 (67%)
+Lynn and Saugus,Unreliable,12,0.525,0.182,84612.708,0.221,0.128,455 (51%); 426 (59%); 429 (62%); 442 (61%); 450 (55%)
+"Chelsea, East Boston and Winthrop",Reliable,36,0.774,0.262,81362.688,0.107,0.681,111 (82%); SL3 (78%); 116 (77%); 104 (80%); 110 (81%)
+All stops,,1117,0.656,0.22,111750.662,0.105,0.234,
