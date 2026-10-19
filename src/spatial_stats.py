@@ -48,14 +48,21 @@ DOWNTOWN = (-71.0605, 42.3555)  # Downtown Crossing
 SEED = 2025
 
 
+def route_sort_key(route):
+    # numbered routes in numeric order, then lettered ones (CT2, SL1, ...)
+    return (0, int(route), "") if route.isdigit() else (1, 0, route)
+
+
 def stop_reliability():
-    return duckdb.sql(f"""
+    df = duckdb.sql(f"""
         SELECT
             stop_id,
             any_value(time_point_id)                         AS time_point_id,
             count(on_time)                                   AS timepoints_scored,
             avg(on_time::INT)                                AS on_time_rate,
             count(DISTINCT route_id)                         AS routes,
+            list(DISTINCT route_id)                          AS route_ids,
+            list(DISTINCT direction_id)                      AS directions,
             avg((standard_type = 'Headway')::INT)            AS share_frequent,
             avg((point_type = 'Startpoint')::INT)            AS share_origin,
             avg((point_type = 'Endpoint')::INT)              AS share_destination
@@ -64,6 +71,10 @@ def stop_reliability():
         GROUP BY stop_id
         HAVING count(on_time) >= {MIN_EVENTS}
     """).df()
+    # for pop-ups: many stop names are shared by the stops on each side of the street
+    df["route_list"] = df.pop("route_ids").map(lambda r: ", ".join(sorted(r, key=route_sort_key)))
+    df["direction"] = df.pop("directions").map(lambda d: d[0] if len(d) == 1 else "Both directions")
+    return df
 
 
 def stop_points():
