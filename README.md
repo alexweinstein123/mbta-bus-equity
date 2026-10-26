@@ -30,12 +30,7 @@ The hypothesis was **not supported**. Reliability problems follow geography more
 
 ### On-time rate by neighborhood (Fall 2025, weighted by riders)
 
-| Quartile of stop walkshed | Car-free share | On time | Median income | On time |
-|---|---|---|---|---|
-| Lowest | under 9% car-free | **58%** | under $84k | 67% |
-| Second | 9–17% | 67% | $84k–$112k | 67% |
-| Third | 17–33% | 67% | $112k–$145k | 67% |
-| Highest | over 33% car-free | **69%** | over $145k | 68% |
+![Bar charts of bus on-time rate by quartile of income and of car-free share: flat at 67 to 68 percent across income, 58 percent in the least car-free quartile and 67 to 69 percent in the rest](figures/chart_reliability_by_quartile.png)
 
 Source: `results/reliability_by_quartile.csv`
 
@@ -79,6 +74,7 @@ The car-free effect flips sign once distance to downtown is included (car-free s
 | 5. Spatial statistics | `src/spatial_stats.py` | Hot spots, spatial autocorrelation, spatial regression, sensitivity table |
 | 6. Local regression | `src/gwr.py` | Geographically weighted and multiscale GWR |
 | 7. Riders | `src/ridership.py` | Weights reliability by the riders on each bus; quartile tables |
+| 8. Chart | `src/make_chart.py` | On-time rate by income and car-free quartile |
 
 **Measuring reliability.** Each timepoint crossing is scored with the MBTA's own rules from its [Service Delivery Policy](https://www.mbta.com/policies/service-delivery-policy) (December 2025, pp. 19–20):
 
@@ -152,6 +148,7 @@ python src/equity.py
 python src/spatial_stats.py
 python src/gwr.py            # a few minutes
 python src/ridership.py
+python src/make_chart.py
 ```
 
 Raw data and processed outputs are not committed because the files are large; the scripts recreate them. Map-ready GeoPackages for ArcGIS Pro or QGIS are written to `data/processed/gis/`.
